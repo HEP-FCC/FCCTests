@@ -120,4 +120,4 @@ if [ "${#EMAILS[@]}" -lt 1 ]; then
   exit 1
 fi
 
-# sendmail -t "${EMAILS[@]}" < ${MAILFILE}
+sendmail -t "${EMAILS[@]}" < ${MAILFILE}
