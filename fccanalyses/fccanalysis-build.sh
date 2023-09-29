@@ -8,14 +8,14 @@ WORKDIR="${FCCTESTS_TMPDIR}/build-fccanalyses-${RNDMSTR}"
 mkdir -p "${WORKDIR}"
 cd "${WORKDIR}" || exit 1
 
-git clone git@github.com:HEP-FCC/FCCAnalyses.git
+git clone https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
 cd FCCAnalyses || exit 1
 
 mkdir build install
 cd build || exit 1
-cmake -DCMAKE_INSTALL_PREFIX=../install .. || exit $?
-make -j 32 || exit $?
-make install || exit $?
-make test || exit $?
+cmake -DCMAKE_INSTALL_PREFIX=../install .. || exit 1
+make -j 32 || exit 1
+make install || exit 1
+make test || exit 1
 
-exit $?
+exit
