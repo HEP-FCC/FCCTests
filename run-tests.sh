@@ -34,7 +34,7 @@ mkdir -p "${FCCTESTS_TMPDIR}"
 #
 declare -a EDM4HEPINFILES=(
   # spring 2021
-  "/eos/experiment/fcc/ee/generation/DelphesEvents/spring2021/IDEA/p8_ee_ZH_ecm240/events_101027117.root"
+  # "/eos/experiment/fcc/ee/generation/DelphesEvents/spring2021/IDEA/p8_ee_ZH_ecm240/events_101027117.root"
   # winter 2023
   "/eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_ZZ_ecm240/events_092194859.root"
 )
@@ -54,7 +54,11 @@ for STACK in "${STACKS[@]}"; do
       if ! bash "${WORKDIR}/${TEST}.sh"; then
         NFAILURES=$((NFAILURES+1))
 
-        echo -e "\n${TEST}: Error occurred in:" | tee -a ${SUMMARYFILE} 1>&2
+        echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
+        echo "    Stack:  ${FCCTESTS_STACK}" | tee -a ${SUMMARYFILE} 1>&2
+        echo "    Infile: ${FCCTESTS_INFILE}" | tee -a ${SUMMARYFILE} 1>&2
+      else
+        echo -e "\n[SUCCESS]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
         echo "    Stack:  ${FCCTESTS_STACK}" | tee -a ${SUMMARYFILE} 1>&2
         echo "    Infile: ${FCCTESTS_INFILE}" | tee -a ${SUMMARYFILE} 1>&2
       fi
@@ -65,14 +69,17 @@ for STACK in "${STACKS[@]}"; do
     done
   done
 done
+echo
 
 
 #
 # FCCAnalyses tests
 #
 declare -a EDM4HEPTESTS=(
-  fccanalyses/fccanalysis-stack-help
   fccanalyses/fccanalysis-build
+  fccanalyses/fccanalysis-stack-help
+  fccanalyses/fccanalysis-stack-run
+  fccanalyses/fccanalysis-stack-full-analysis
 )
 
 for STACK in "${STACKS[@]}"; do
@@ -82,7 +89,10 @@ for STACK in "${STACKS[@]}"; do
     if ! bash "${WORKDIR}/${TEST}.sh"; then
       NFAILURES=$((NFAILURES+1))
 
-      echo -e "\n${TEST}: Error occurred in:" | tee -a ${SUMMARYFILE} 1>&2
+      echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
+      echo "    Stack:  ${FCCTESTS_STACK}" | tee -a ${SUMMARYFILE} 1>&2
+    else
+      echo -e "\n[SUCCESS]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
       echo "    Stack:  ${FCCTESTS_STACK}" | tee -a ${SUMMARYFILE} 1>&2
     fi
     echo
