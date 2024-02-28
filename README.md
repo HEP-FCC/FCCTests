@@ -5,7 +5,7 @@ A bunch of FCC related tests.
 
 ## Where and when they run
 
-Regularly at 7:00 AM on `fcc-ironic-02` machine. Time is selected to be after
+Regularly at 7:00 AM on `fcc-ironic-03` machine. Time is selected to be after
 nightlies key4hep stack is already build.
 
 
