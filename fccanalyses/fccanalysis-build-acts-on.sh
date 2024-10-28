@@ -11,8 +11,11 @@ cd "${WORKDIR}" || exit 1
 git clone https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
 cd FCCAnalyses || exit 1
 
-source ./setup.sh
-fccanalysis build -j 16
-fccanalysis test -j 16
+mkdir build install
+cd build || exit 1
+cmake -DCMAKE_INSTALL_PREFIX=../install -DWITH_ACTS=ON .. || exit 1
+make -j 32 || exit 1
+make install || exit 1
+make test -j 16 || exit 1
 
 exit

@@ -3,19 +3,15 @@
 #
 # Global setup
 #
-declare -A STACKS=(
-  ["stable"]="/cvmfs/sw.hsf.org/key4hep/setup.sh"
-  ["nightlies"]="/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh"
-)
-
+export FCCTESTS_SCRIPTPATH=$(realpath "$0")
+export FCCTESTS_DIR=$(dirname "${FCCTESTS_SCRIPTPATH}")
 export FCCTESTS_TMPDIR=/tmp/fcc-tests
-export LOGDIR_STEM="$FCCTESTS_TMPDIR/log"
 
-SUMMARYFILE=/tmp/fcc-test-summary.txt
-MAILFILE=/tmp/fcc-test-mail.txt
+LOGDIR_STEM="${FCCTESTS_TMPDIR}/log"
+SUMMARYFILE="${FCCTESTS_TMPDIR}/fcc-test-summary.txt"
+MAILFILE="${FCCTESTS_TMPDIR}/fcc-test-mail.txt"
 
-WORKDIR=$(dirname -- "$0")
-MAILLISTFILE=${WORKDIR}/emails.lst
+MAILLISTFILE=${FCCTESTS_DIR}/emails.lst
 RUNDATE=$(date)
 NFAILURES=0
 
@@ -23,6 +19,11 @@ NFAILURES=0
 rm -rf ${FCCTESTS_TMPDIR}
 mkdir -p "${FCCTESTS_TMPDIR}"
 
+
+declare -A STACKS=(
+  ["stable"]="/cvmfs/sw.hsf.org/key4hep/setup.sh"
+  ["nightlies"]="/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh"
+)
 
 #
 # Run tests
@@ -32,27 +33,28 @@ mkdir -p "${FCCTESTS_TMPDIR}"
 # Podio/EDM4hep tests
 #
 declare -A EDM4HEPINFILES=(
-  ["spring-2021"]="/eos/experiment/fcc/ee/generation/DelphesEvents/spring2021/IDEA/p8_ee_ZH_ecm240/events_101027117.root"
-  ["winter-2023"]="/eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_ZZ_ecm240/events_092194859.root"
+  # ["spring-2021"]="/eos/experiment/fcc/ee/generation/DelphesEvents/spring2021/IDEA/p8_ee_ZH_ecm240/events_101027117.root"
+  # ["winter-2023"]="/eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_ZZ_ecm240/events_092194859.root"
 )
 
 declare -a EDM4HEPTESTS=(
-  podio/podio-dump
-  podio/podio-dump-detail
-  edm4hep/edm4hep2json
+  # podio/podio-dump
+  # podio/podio-dump-detail
+  # edm4hep/edm4hep2json
 )
 
-for STACK in "${!STACKS[@]}"; do
-  for INFILE in "${!EDM4HEPINFILES[@]}"; do
+for TEST in "${EDM4HEPTESTS[@]}"; do
+  for STACK in "${!STACKS[@]}"; do
     export FCCTESTS_STACK=${STACKS[$STACK]}
-    export FCCTESTS_INFILE=${EDM4HEPINFILES[$INFILE]}
 
-    for TEST in "${EDM4HEPTESTS[@]}"; do
+    for INFILE in "${!EDM4HEPINFILES[@]}"; do
+      export FCCTESTS_INFILE=${EDM4HEPINFILES[$INFILE]}
+
       LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}/${INFILE}"
       mkdir -p "${LOGDIR}"
 
       echo $(date) > "${LOGDIR}/out.log"
-      if ! bash "${WORKDIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
+      if ! bash "${FCCTESTS_DIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
         NFAILURES=$((NFAILURES+1))
 
         echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
@@ -65,13 +67,10 @@ for STACK in "${!STACKS[@]}"; do
       fi
 
       echo $(date) >> "${LOGDIR}/out.log"
-
-      echo
-      echo
-      printf '=%.0s' {1..80}
-      echo
     done
   done
+
+  echo "---" | tee -a ${SUMMARYFILE} 1>&2
 done
 echo
 
@@ -81,22 +80,31 @@ echo
 #
 declare -a FCCANATESTS=(
   fccanalyses/fccanalysis-build
+  fccanalyses/fccanalysis-build-pre-edm4hep1
+  fccanalyses/fccanalysis-build-cmake
+  fccanalyses/fccanalysis-build-acts-on
+  fccanalyses/fccanalysis-build-full-analysis
+  fccanalyses/fccanalysis-build-full-analysis-user-args
+  fccanalyses/fccanalysis-build-full-analysis-old-anascripts
+  fccanalyses/fccanalysis-build-full-analysis-pre-edm4hep1
+  fccanalyses/fccanalysis-build-full-analysis-pre-edm4hep1-old-anascripts
   fccanalyses/fccanalysis-stack-help
   fccanalyses/fccanalysis-stack-run
   fccanalyses/fccanalysis-stack-full-analysis
-  fccanalyses/fccanalysis-calo-ntupleizer
+  fccanalyses/fccanalysis-build-calo-ntupleizer
+  fccanalyses/fccanalysis-stack-calo-ntupleizer
 )
 
-for STACK in "${!STACKS[@]}"; do
-  export FCCTESTS_STACK=${STACKS[$STACK]}
+for TEST in "${FCCANATESTS[@]}"; do
+  for STACK in "${!STACKS[@]}"; do
+    export FCCTESTS_STACK=${STACKS[$STACK]}
 
-  for TEST in "${FCCANATESTS[@]}"; do
     LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}"
     mkdir -p "${LOGDIR}"
 
     echo $(date) > "${LOGDIR}/out.log"
 
-    if ! bash "${WORKDIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
+    if ! bash "${FCCTESTS_DIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
       NFAILURES=$((NFAILURES+1))
 
       echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
@@ -107,48 +115,9 @@ for STACK in "${!STACKS[@]}"; do
     fi
 
     echo $(date) >> "${LOGDIR}/out.log"
-
-    echo
-    echo
-    printf '=%.0s' {1..80}
-    echo
   done
-done
 
-
-#
-# k4RecCalorimeter tests
-#
-declare -a K4RECCALOTESTS=(
-  k4reccalo/k4reccalo-build
-)
-
-for STACK in "${!STACKS[@]}"; do
-  export FCCTESTS_STACK=${STACKS[$STACK]}
-
-  for TEST in "${K4RECCALOTESTS[@]}"; do
-    LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}"
-    mkdir -p "${LOGDIR}"
-
-    echo $(date) > "${LOGDIR}/out.log"
-
-    if ! bash "${WORKDIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
-      NFAILURES=$((NFAILURES+1))
-
-      echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-      echo "    Stack:  ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
-    else
-      echo -e "\n[SUCCESS]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-      echo "    Stack:  ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
-    fi
-
-    echo $(date) >> "${LOGDIR}/out.log"
-
-    echo
-    echo
-    printf '=%.0s' {1..80}
-    echo
-  done
+  echo "---" | tee -a ${SUMMARYFILE} 1>&2
 done
 
 

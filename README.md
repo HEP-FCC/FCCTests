@@ -1,6 +1,6 @@
 # FCC Tests
 
-A bunch of FCC related tests.
+A bunch of FCCAnalyses related tests.
 
 
 ## Where and when they run
