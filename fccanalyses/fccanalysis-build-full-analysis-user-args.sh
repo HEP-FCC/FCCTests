@@ -14,7 +14,7 @@ cd FCCAnalyses || exit 1
 source ./setup.sh
 fccanalysis build -j 32 || exit 1
 
-fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py \
+fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py -- \
                 --muon-pt 25 || exit 1
 mv outputs/FCCee/higgs/mH-recoil/mumu/stage1_25.0 outputs/FCCee/higgs/mH-recoil/mumu/stage1_10.0
 fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage2.py || exit 1
