@@ -1,18 +1,17 @@
 #!/bin/bash
 
+set -e
+
 source "${FCCTESTS_STACK}"
 
-RNDMSTR="$(sed 's/[-]//g' < /proc/sys/kernel/random/uuid | head -c 12)"
-WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${RNDMSTR}"
+WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${FCCTESTS_RNDMSTR}"
 
-mkdir -p "${WORKDIR}" || exit 1
-cd "${WORKDIR}" || exit 1
+mkdir -p "${WORKDIR}"
+cd "${WORKDIR}"
 
-git clone https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
-cd FCCAnalyses || exit 1
+git clone "${FCCTESTS_FCCANALYSES_REPO}" -b "${FCCTESTS_FCCANALYSES_BRANCH}"
+cd FCCAnalyses
 
 source ./setup.sh
 fccanalysis build -j 16
 fccanalysis test -j 16
-
-exit

@@ -1,19 +1,15 @@
 #!/bin/bash
 
-# source "${FCCTESTS_STACK}"
-source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-03-10
+set -e
 
-RNDMSTR="$(sed 's/[-]//g' < /proc/sys/kernel/random/uuid | head -c 12)"
-WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${RNDMSTR}"
+WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${FCCTESTS_RNDMSTR}"
 
-mkdir -p "${WORKDIR}" || exit 1
-cd "${WORKDIR}" || exit 1
+mkdir -p "${WORKDIR}"
+cd "${WORKDIR}"
 
-git clone --branch pre-edm4hep1 https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
-cd FCCAnalyses || exit 1
+git clone --branch pre-edm4hep1 "${FCCTESTS_FCCANALYSES_REPO}"
+cd FCCAnalyses
 
 source ./setup.sh
-fccanalysis build -j 32
+fccanalysis build -j 16
 fccanalysis test -j 16
-
-exit

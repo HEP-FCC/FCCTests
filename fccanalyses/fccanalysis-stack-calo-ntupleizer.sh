@@ -1,21 +1,22 @@
 #!/bin/bash
 
+set -e
+
 source "${FCCTESTS_STACK}"
 
-RNDMSTR="$(sed 's/[-]//g' < /proc/sys/kernel/random/uuid | head -c 12)"
-WORKDIR="${FCCTESTS_TMPDIR}/fccanalysis-calo-ntupleizer-${RNDMSTR}"
+WORKDIR="${FCCTESTS_TMPDIR}/fccanalysis-calo-ntupleizer-${FCCTESTS_RNDMSTR}"
 
-mkdir -p "${WORKDIR}" || exit 1
-cd "${WORKDIR}" || exit 1
+mkdir -p "${WORKDIR}"
+cd "${WORKDIR}"
 
 # Make EOS accessible
-echo "kinit -kt ${FCCTESTS_DIR}/fcc-tests.keytab ${USER} || exit 1"
-kinit -kt ${FCCTESTS_DIR}/fcc-tests.keytab ${USER} || exit 1
-aklog || exit 1
+echo "kinit -kt ${FCCTESTS_DIR}/fcc-tests.keytab ${USER}"
+kinit -kt ${FCCTESTS_DIR}/fcc-tests.keytab ${USER}
+aklog
 
 # Obtain FCC configuration files
-git clone git@github.com:HEP-FCC/FCC-config.git || exit 1
-cd FCC-config/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03 || exit 1
+git clone git@github.com:HEP-FCC/FCC-config.git
+cd FCC-config/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03
 
 # Enable saving of ECal hits and cells
 sed -i 's/saveHits = False/saveHits = True/g' run_digi_reco.py
@@ -25,9 +26,9 @@ sed -i 's/saveCells = False/saveCells = True/g' run_digi_reco.py
 ./ctest_sim_digi_reco.sh
 
 # Dump reco file
-podio-dump ALLEGRO_sim_digi_reco.root || exit 1
-cp ALLEGRO_sim_digi_reco.root "${WORKDIR}/" || exit 1
-cd "${WORKDIR}" || exit 1
+podio-dump ALLEGRO_sim_digi_reco.root
+cp ALLEGRO_sim_digi_reco.root "${WORKDIR}/"
+cd "${WORKDIR}"
 
 # Run analysis
 python ${FCCANALYSES}/../share/examples/examples/FCCee/fullSim/caloNtupleizer/analysis.py \

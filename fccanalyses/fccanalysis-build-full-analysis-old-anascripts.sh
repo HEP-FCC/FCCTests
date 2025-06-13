@@ -1,26 +1,27 @@
 #!/bin/bash
 
+set -e
+
 source "${FCCTESTS_STACK}"
 
-RNDMSTR="$(sed 's/[-]//g' < /proc/sys/kernel/random/uuid | head -c 12)"
-WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${RNDMSTR}"
+WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-${FCCTESTS_RNDMSTR}"
 
-mkdir -p "${WORKDIR}" || exit 1
-cd "${WORKDIR}" || exit 1
+mkdir -p "${WORKDIR}"
+cd "${WORKDIR}"
 
-mkdir -p "${WORKDIR}/old-ana-scripts" || exit 1
-cd "${WORKDIR}/old-ana-scripts" || exit 1
-git clone https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
-cd FCCAnalyses || exit 1
+mkdir -p "${WORKDIR}/old-ana-scripts"
+cd "${WORKDIR}/old-ana-scripts"
+git clone https://github.com/HEP-FCC/FCCAnalyses.git
+cd FCCAnalyses
 git checkout de84ccb53
 cd ../..
 
-git clone https://github.com/HEP-FCC/FCCAnalyses.git || exit 1
-cd FCCAnalyses || exit 1
+git clone "${FCCTESTS_FCCANALYSES_REPO}" -b "${FCCTESTS_FCCANALYSES_BRANCH}"
+cd FCCAnalyses
 
 source ./setup.sh
-fccanalysis build -j 32 || exit 1
-fccanalysis run ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py || exit 1
-fccanalysis run ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_stage2.py || exit 1
-fccanalysis final ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_final.py || exit 1
+fccanalysis build -j 16
+fccanalysis run ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py
+fccanalysis run ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_stage2.py
+fccanalysis final ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_final.py
 fccanalysis plots ../old-ana-scripts/FCCAnalyses/examples/FCCee/higgs/mH-recoil/mumu/analysis_plots.py

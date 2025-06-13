@@ -98,6 +98,9 @@ declare -a FCCANATESTS=(
 for TEST in "${FCCANATESTS[@]}"; do
   for STACK in "${!STACKS[@]}"; do
     export FCCTESTS_STACK=${STACKS[$STACK]}
+    export FCCTESTS_RNDMSTR="$(sed 's/[-]//g' < /proc/sys/kernel/random/uuid | head -c 12)"
+    export FCCTESTS_FCCANALYSES_REPO="https://github.com/HEP-FCC/FCCAnalyses.git"
+    export FCCTESTS_FCCANALYSES_BRANCH="master"
 
     LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}"
     mkdir -p "${LOGDIR}"
@@ -108,11 +111,11 @@ for TEST in "${FCCANATESTS[@]}"; do
       NFAILURES=$((NFAILURES+1))
 
       echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-      echo "    Stack:  ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
     else
       echo -e "\n[SUCCESS]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-      echo "    Stack:  ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
     fi
+    echo "           Stack:      ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
+    echo "           Reference:  ${FCCTESTS_RNDMSTR}" | tee -a ${SUMMARYFILE} 1>&2
 
     echo $(date) >> "${LOGDIR}/out.log"
   done
