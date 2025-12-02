@@ -11,6 +11,7 @@ LOGDIR_STEM="${FCCTESTS_TMPDIR}/log"
 SUMMARYFILE="${FCCTESTS_TMPDIR}/fcc-test-summary.txt"
 MAILFILE="${FCCTESTS_TMPDIR}/fcc-test-mail.txt"
 
+mkdir -p ${FCCTESTS_TMPDIR}
 MAILLISTFILE=${FCCTESTS_DIR}/emails.lst
 RUNDATE=$(date)
 NFAILURES=0
@@ -42,7 +43,7 @@ declare -a EDM4HEPTESTS=(
   # podio/podio-dump-detail
   # edm4hep/edm4hep2json
 )
-
+# TODO: Convert to HTML email
 for TEST in "${EDM4HEPTESTS[@]}"; do
   for STACK in "${!STACKS[@]}"; do
     export FCCTESTS_STACK=${STACKS[$STACK]}
@@ -53,7 +54,7 @@ for TEST in "${EDM4HEPTESTS[@]}"; do
       LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}/${INFILE}"
       mkdir -p "${LOGDIR}"
 
-      echo $(date) > "${LOGDIR}/out.log"
+      echo -e "$(date)\n" > "${LOGDIR}/out.log"
       if ! bash "${FCCTESTS_DIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
         NFAILURES=$((NFAILURES+1))
 
@@ -66,7 +67,7 @@ for TEST in "${EDM4HEPTESTS[@]}"; do
         echo "    Campaign: ${INFILE}" | tee -a ${SUMMARYFILE} 1>&2
       fi
 
-      echo $(date) >> "${LOGDIR}/out.log"
+      echo -e "\n$(date)" >> "${LOGDIR}/out.log"
     done
   done
 
@@ -88,10 +89,11 @@ declare -a FCCANATESTS=(
   fccanalyses/fccanalysis-build-full-analysis-old-anascripts
   fccanalyses/fccanalysis-build-full-analysis-pre-edm4hep1
   fccanalyses/fccanalysis-build-full-analysis-pre-edm4hep1-old-anascripts
+  fccanalyses/fccanalysis-build-calo-ntupleizer
   fccanalyses/fccanalysis-stack-help
   fccanalyses/fccanalysis-stack-run
   fccanalyses/fccanalysis-stack-full-analysis
-  fccanalyses/fccanalysis-build-calo-ntupleizer
+  fccanalyses/fccanalysis-stack-full-analysis-old-anascripts
   fccanalyses/fccanalysis-stack-calo-ntupleizer
 )
 
@@ -105,22 +107,42 @@ for TEST in "${FCCANATESTS[@]}"; do
     LOGDIR="${LOGDIR_STEM}/${TEST}/${STACK}"
     mkdir -p "${LOGDIR}"
 
-    echo $(date) > "${LOGDIR}/out.log"
+    echo -e "$(date)\n" > "${LOGDIR}/out.log"
 
     if ! bash "${FCCTESTS_DIR}/${TEST}.sh" >> "${LOGDIR}/out.log" 2> "${LOGDIR}/err.log"; then
       NFAILURES=$((NFAILURES+1))
 
-      echo -e "\n[FAILURE]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-    else
-      echo -e "\n[SUCCESS]  ${TEST}" | tee -a ${SUMMARYFILE} 1>&2
-    fi
-    echo "           Stack:      ${STACK}" | tee -a ${SUMMARYFILE} 1>&2
-    echo "           Reference:  ${FCCTESTS_RNDMSTR}" | tee -a ${SUMMARYFILE} 1>&2
+      echo -e "\n[FAILURE]  ${TEST}"
 
-    echo $(date) >> "${LOGDIR}/out.log"
+      {
+        echo "<div>"
+        echo "<p><span class=\"err\">[FAILURE]</span> ${TEST}</p>"
+      } >> ${SUMMARYFILE}
+    else
+      echo -e "\n[SUCCESS]  ${TEST}"
+
+      {
+        echo "<div>"
+        echo "<p><span class=\"ok\">[SUCCESS]</span> ${TEST}</p>"
+      } >> ${SUMMARYFILE}
+    fi
+
+    echo "           Stack:      ${STACK}"
+    echo "           Reference:  ${FCCTESTS_RNDMSTR}"
+    {
+      echo "<ul>"
+      echo "<li>Stack: ${STACK}</li>"
+      echo "<li>Reference: ${FCCTESTS_RNDMSTR}</li>"
+      echo "</ul>"
+      echo "</div>"
+    } >> ${SUMMARYFILE}
+
+    echo -e "\n$(date)" >> "${LOGDIR}/out.log"
   done
 
-  echo "---" | tee -a ${SUMMARYFILE} 1>&2
+  echo "---"
+
+  echo "<hr>" >> ${SUMMARYFILE}
 done
 
 
@@ -128,16 +150,47 @@ done
 # Send email(s)
 #
 
+SUBJECT="Subject: FCC Tests: ${NFAILURES} failures"
 if [ "${NFAILURES}" -eq "0" ]; then
-  echo "Subject: FCC Tests: All tests succeeded" > ${MAILFILE}
-else
-  echo "Subject: FCC Tests: ${NFAILURES} failures" > ${MAILFILE}
+  SUBJECT="Subject: FCC Tests: All tests succeeded"
 fi
+
 {
-  echo -e "Hi,\n"
-  echo -e "The tests run at ${RUNDATE}, and there were ${NFAILURES} failures.\n"
-} >> ${MAILFILE}
-cat ${SUMMARYFILE} >> ${MAILFILE}
+  # TODO: Create a service account for tests
+  # echo "From: FCCTests <morty@cern.ch>"
+  echo "${SUBJECT}"
+  echo "Content-Type: text/html"
+  echo "MIME-Version: 1.0"
+  echo ""
+
+  echo "<!DOCTYPE html>"
+  echo "<html>"
+  echo "<head>"
+  echo "<title>${SUBJECT}</title>"
+  echo "<style>"
+  echo ".err {color:white;"
+  echo "      background-color:Tomato;"
+  echo "      padding-left:5;"
+  echo "      padding-right:5;"
+  echo "      padding-bottom:5;"
+  echo "      margin-right:30;}"
+  echo ".ok {color:white;"
+  echo "     background-color:MediumSeaGreen;"
+  echo "     padding-left:5;"
+  echo "     padding-right:5;"
+  echo "     padding-bottom:5;"
+  echo "     margin-right:20;}"
+  echo "</style>"
+  echo "</head>"
+  echo "<body>"
+  echo "<p>Hi,<br>"
+  echo "The tests run at $(hostname) on ${RUNDATE}, and there were ${NFAILURES} failures.</p>"
+
+  cat ${SUMMARYFILE}
+
+  echo "</body>"
+  echo "</html>"
+} > ${MAILFILE}
 
 if [ ! -f "${MAILLISTFILE}" ]; then
   echo "Can't find email list file: ${MAILLISTFILE}" | tee -a ${SUMMARYFILE} 1>&2
