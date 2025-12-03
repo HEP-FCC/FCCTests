@@ -116,14 +116,14 @@ for TEST in "${FCCANATESTS[@]}"; do
 
       {
         echo "<div>"
-        echo "<p><span class=\"err\">[FAILURE]</span> ${TEST}</p>"
+        echo "<p><span class=\"err\">FAILURE</span> ${TEST}</p>"
       } >> ${SUMMARYFILE}
     else
       echo -e "\n[SUCCESS]  ${TEST}"
 
       {
         echo "<div>"
-        echo "<p><span class=\"ok\">[SUCCESS]</span> ${TEST}</p>"
+        echo "<p><span class=\"ok\">SUCCESS</span> ${TEST}</p>"
       } >> ${SUMMARYFILE}
     fi
 
@@ -172,13 +172,15 @@ fi
   echo "      background-color:Tomato;"
   echo "      padding-left:5;"
   echo "      padding-right:5;"
-  echo "      padding-bottom:5;"
+  echo "      padding-bottom:2;"
+  echo "      border-radius:3px;"
   echo "      margin-right:30;}"
   echo ".ok {color:white;"
   echo "     background-color:MediumSeaGreen;"
   echo "     padding-left:5;"
   echo "     padding-right:5;"
-  echo "     padding-bottom:5;"
+  echo "     padding-bottom:2;"
+  echo "     border-radius:3px;"
   echo "     margin-right:20;}"
   echo "</style>"
   echo "</head>"
