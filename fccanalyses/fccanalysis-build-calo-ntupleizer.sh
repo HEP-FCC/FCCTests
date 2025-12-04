@@ -4,7 +4,7 @@ set -e
 
 source "${FCCTESTS_STACK}"
 
-WORKDIR="${FCCTESTS_TMPDIR}/fccanalysis-calo-ntupleizer-${FCCTESTS_RNDMSTR}"
+WORKDIR="${FCCTESTS_TMPDIR}/fccanalyses-build-calo-ntupleizer-${FCCTESTS_RNDMSTR}"
 
 mkdir -p "${WORKDIR}"
 cd "${WORKDIR}"

@@ -21,6 +21,7 @@ Quick and dirty solution. Also, Bash is available on a lot of systems.
 
 ## To Do
 
+* Determine the `$WORKDIR` in the outer loop
 * Report output logs somewhere
 * Bash is just a quick hack
 * Run this in Docker/Podman --- CC7, AlmaLinux9, RH9, Ubuntu
