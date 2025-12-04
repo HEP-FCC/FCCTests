@@ -186,7 +186,12 @@ fi
   echo "</head>"
   echo "<body>"
   echo "<p>Hi,<br>"
-  echo "The tests run at $(hostname) on ${RUNDATE}, and there were ${NFAILURES} failures.</p>"
+  echo "the tests run at $(hostname) on ${RUNDATE}, and there were ${NFAILURES} failures.</p>"
+  echo "<p>Today the Key4hep stacks used are as follows:</p>"
+  echo "<ul>"
+  echo "<li>release: $(source /cvmfs/sw.hsf.org/key4hep/setup.sh > /dev/null;echo $KEY4HEP_STACK)</li>"
+  echo "<li>nightlies: $(source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh > /dev/null;echo $KEY4HEP_STACK)</li>"
+  echo "</ul>"
 
   cat ${SUMMARYFILE}
 
