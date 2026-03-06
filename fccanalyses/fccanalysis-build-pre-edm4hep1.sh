@@ -11,5 +11,5 @@ git clone --branch pre-edm4hep1 "${FCCTESTS_FCCANALYSES_REPO}"
 cd FCCAnalyses
 
 source ./setup.sh
-fccanalysis build -j 16
-fccanalysis test -j 16
+fccanalysis build -j ${FCCTESTS_NTHREADS}
+fccanalysis test -j ${FCCTESTS_NTHREADS}

@@ -1,11 +1,19 @@
 #!/bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 #
 # Global setup
 #
 export FCCTESTS_SCRIPTPATH=$(realpath "$0")
 export FCCTESTS_DIR=$(dirname "${FCCTESTS_SCRIPTPATH}")
 export FCCTESTS_TMPDIR=/tmp/fcc-tests
+
+FCCTESTS_NTHREADS="$(nproc)"
+if [ "${FCCTESTS_NTHREADS}" -gt "16" ]; then
+  FCCTESTS_NTHREADS="16"
+fi
+export FCCTESTS_NTHREADS
 
 LOGDIR_STEM="${FCCTESTS_TMPDIR}/log"
 SUMMARYFILE="${FCCTESTS_TMPDIR}/fcc-test-summary.txt"
@@ -16,19 +24,22 @@ MAILLISTFILE=${FCCTESTS_DIR}/emails.lst
 RUNDATE=$(date)
 NFAILURES=0
 
+# Load utility functions
+source ${SCRIPT_DIR}/utils.sh
+
+#
+# Run tests
+#
+
 : > ${SUMMARYFILE}  # Clearing summary file
 rm -rf ${FCCTESTS_TMPDIR}
 mkdir -p "${FCCTESTS_TMPDIR}"
 
 
 declare -A STACKS=(
-  ["stable"]="/cvmfs/sw.hsf.org/key4hep/setup.sh"
+  ["release"]="/cvmfs/sw.hsf.org/key4hep/setup.sh"
   ["nightlies"]="/cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh"
 )
-
-#
-# Run tests
-#
 
 #
 # Podio/EDM4hep tests
@@ -150,15 +161,17 @@ done
 # Send email(s)
 #
 
-SUBJECT="Subject: FCC Tests: ${NFAILURES} failures"
+SUBJECT="FCC Tests at $(hostname): ${NFAILURES} failures"
 if [ "${NFAILURES}" -eq "0" ]; then
-  SUBJECT="Subject: FCC Tests: All tests succeeded"
+  SUBJECT="FCC Tests at $(hostname): All tests succeeded"
 fi
 
 {
-  # TODO: Create a service account for tests
-  # echo "From: FCCTests <morty@cern.ch>"
-  echo "${SUBJECT}"
+  # Non existent accounts should use "-noreply" in the name
+  echo "From: FCCTests <fcctests-noreply@cern.ch>"
+  # TODO: Create a service account for receiving test results
+  echo "To: $(get_email_recipients)"
+  echo "Subject: ${SUBJECT}"
   echo "Content-Type: text/html"
   echo "MIME-Version: 1.0"
   echo ""
@@ -172,6 +185,7 @@ fi
   echo "      background-color:Tomato;"
   echo "      padding-left:5;"
   echo "      padding-right:5;"
+  echo "      padding-top:0;"
   echo "      padding-bottom:2;"
   echo "      border-radius:3px;"
   echo "      margin-right:30;}"
@@ -179,19 +193,37 @@ fi
   echo "     background-color:MediumSeaGreen;"
   echo "     padding-left:5;"
   echo "     padding-right:5;"
+  echo "     padding-top:0;"
   echo "     padding-bottom:2;"
   echo "     border-radius:3px;"
   echo "     margin-right:20;}"
+  echo "code {color: white;"
+  echo "      background-color: Silver;"
+  echo "      padding-left:5;"
+  echo "      padding-right:5;"
+  echo "      padding-top:0;"
+  echo "      padding-bottom:2;"
+  echo "      border-radius:3px;"
+  echo "      white-space: nowrap;}"
   echo "</style>"
   echo "</head>"
   echo "<body>"
   echo "<p>Hi,<br>"
-  echo "the tests run at $(hostname) on ${RUNDATE}, and there were ${NFAILURES} failures.</p>"
-  echo "<p>Today the Key4hep stacks used are as follows:</p>"
+  echo "the tests run at $(hostname) on ${RUNDATE} and there were ${NFAILURES} failures.</p>"
+  echo "<p>The Key4hep stacks used are as follows:</p>"
   echo "<ul>"
-  echo "<li>release: $(source /cvmfs/sw.hsf.org/key4hep/setup.sh > /dev/null;echo $KEY4HEP_STACK)</li>"
-  echo "<li>nightlies: $(source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh > /dev/null;echo $KEY4HEP_STACK)</li>"
+  for STACK in "${!STACKS[@]}"; do
+    STACK_PATH=${STACKS[$STACK]}
+    echo "  <li>${STACK}:"
+    echo "    <ul>"
+    echo "      <li>"
+    echo "        <code>$(source $STACK_PATH > /dev/null;echo $KEY4HEP_STACK)</code>"
+    echo "      </li>"
+    echo "    </ul>"
+    echo "  </li>"
+  done
   echo "</ul>"
+  echo "<p>The tests run in ${FCCTESTS_NTHREADS} threads</p>"
 
   cat ${SUMMARYFILE}
 
@@ -199,16 +231,6 @@ fi
   echo "</html>"
 } > ${MAILFILE}
 
-if [ ! -f "${MAILLISTFILE}" ]; then
-  echo "Can't find email list file: ${MAILLISTFILE}" | tee -a ${SUMMARYFILE} 1>&2
-  exit 1
-fi
+echo "Sending email..."
 
-readarray -t EMAILS < "${MAILLISTFILE}"
-
-if [ "${#EMAILS[@]}" -lt 1 ]; then
-  echo "Email list file is probably empty!" | tee -a ${SUMMARYFILE} 1>&2
-  exit 1
-fi
-
-/usr/sbin/sendmail -t "${EMAILS[@]}" < ${MAILFILE}
+/usr/sbin/sendmail -t < ${MAILFILE}

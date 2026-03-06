@@ -13,7 +13,7 @@ git clone "${FCCTESTS_FCCANALYSES_REPO}" -b "${FCCTESTS_FCCANALYSES_BRANCH}"
 cd FCCAnalyses
 
 source ./setup.sh
-fccanalysis build -j 16
+fccanalysis build -j ${FCCTESTS_NTHREADS}
 
 fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py
 fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage2.py

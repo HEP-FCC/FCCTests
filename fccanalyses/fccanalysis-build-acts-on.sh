@@ -15,6 +15,6 @@ cd FCCAnalyses
 mkdir build install
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=../install -DWITH_ACTS=ON ..
-make -j 16
+make -j ${FCCTESTS_NTHREADS}
 make install
-make test -j 16
+make test -j ${FCCTESTS_NTHREADS}

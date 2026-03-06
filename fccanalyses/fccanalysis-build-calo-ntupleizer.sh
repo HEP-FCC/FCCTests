@@ -36,7 +36,7 @@ cd FCCAnalyses
 
 # Build FCCAnalyses
 source ./setup.sh
-fccanalysis build -j 16
+fccanalysis build -j ${FCCTESTS_NTHREADS}
 
 # Run analysis
 python examples/FCCee/fullSim/caloNtupleizer/analysis.py \

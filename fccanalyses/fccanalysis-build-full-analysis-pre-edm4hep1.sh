@@ -11,8 +11,8 @@ git clone --branch pre-edm4hep1 https://github.com/HEP-FCC/FCCAnalyses.git
 cd FCCAnalyses
 
 source ./setup.sh
-fccanalysis build -j 16
-fccanalysis test -j 16
+fccanalysis build -j ${FCCTESTS_NTHREADS}
+fccanalysis test -j ${FCCTESTS_NTHREADS}
 
 fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage1.py
 fccanalysis run examples/FCCee/higgs/mH-recoil/mumu/analysis_stage2.py
